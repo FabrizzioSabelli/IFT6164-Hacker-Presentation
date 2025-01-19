@@ -2,9 +2,6 @@ from torch.utils.data import Dataset
 import pandas as pd
 import os
 import torch
-import tqdm.notebook as tqdm
-from torch.utils.data import DataLoader, random_split
-from .model.oracle import DNNOracle
 
 
 class AugmentedDataset(Dataset):
@@ -17,7 +14,7 @@ class AugmentedDataset(Dataset):
         """
         self.annotations = pd.read_csv(
             annotations_path
-        )  # columns ["image_id", "label", "og_id", "augmented_id"]
+        )  # columns ["image_id", "oracle_label", "og_id", "augmented_id"]
         self.image_dir = image_dir
         self.annotations_path = annotations_path
         self.aug_iters = 0  # initially no augmentations
@@ -82,6 +79,7 @@ class AugmentedDataset(Dataset):
                     "oracle_label": y_new,
                     "og_id": new_idx % self.init_size,
                     "augmented_id": tmp_aug_iters,
+                    "true_label": -1,  # since we don't care
                 }
             )
 
