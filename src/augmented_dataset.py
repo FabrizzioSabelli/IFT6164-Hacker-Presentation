@@ -13,7 +13,7 @@ class AugmentedDataset(Dataset):
             img_dir (str): Directory with all the images represented as tensors.
             init_size (int): Number of images in the initial dataset.
         """
-        self.annotations = pd.read_csv(
+        self.annotations_df = pd.read_csv(
             annotations_path
         )  # columns ["image_id", "oracle_label", "og_id", "augmented_id"]
         self.image_dir = image_dir
@@ -24,6 +24,10 @@ class AugmentedDataset(Dataset):
 
     def reservoir_sampling(self, dataset, idx):
         pass
+
+    def set_oracle_values(self, oracle_values):
+        self.annotations_df["oracle_label"] = oracle_values
+        self.annotation_df.to_csv(self.annotations_path, index=False)
 
     def jacobian_augmentation(
         self,
@@ -85,13 +89,14 @@ class AugmentedDataset(Dataset):
 
         # we finish by updating at the end not to mess up the dataloading with getitem
         self.aug_iters += 1  # new augmentation iteration
+        new_annotations_df = pd.DataFrame(new_annotations)
 
         # save the new image annotations
-        self.annotations = pd.concat([self.annotations, new_annotations])
-        self.annotations.to_csv(self.annotations_path, index=False)
+        self.annotations_df = pd.concat([self.annotations_df, new_annotations_df])
+        self.annotations_df.to_csv(self.annotations_path, index=False)
 
     def __len__(self):
-        return len(self.annotations.index)
+        return len(self.annotations_df.index)
 
     # TODO: implement reservoir sampling indexing example and in this
     def __getitem__(self, idx):
@@ -110,7 +115,7 @@ class AugmentedDataset(Dataset):
         folder = f"it{aug_id}"
 
         img_path = self.image_dir + "/" + folder + "/" + image_name
-        label = self.annotations.iloc[idx]["oracle_label"]
+        label = self.annotations_df.iloc[idx]["oracle_label"]
 
         # Load the image
         image = torch.load(img_path)
@@ -119,9 +124,11 @@ class AugmentedDataset(Dataset):
 
     def get_augmentation_path(self, og_idx) -> dict[str, torch.Tensor]:
         """Function that returns the path of an augmented image given the original image index. Returns a dictionnary with keys augmented_id and values the images as tensors."""
-        image_id = self.annotations[self.annotations["og_id"] == og_idx].sort_values(
-            by=["augmented_id"], ascending=True
-        )[["image_id"], ["augmented_id"]]
+        image_id = self.annotations_df[
+            self.annotations_df["og_id"] == og_idx
+        ].sort_values(by=["augmented_id"], ascending=True)[
+            ["image_id"], ["augmented_id"]
+        ]
         aug_images = {}
         for idx, row in image_id.iterrows():
 
@@ -132,9 +139,9 @@ class AugmentedDataset(Dataset):
     def get_augmented_image(self, og_idx, aug_idx):
         "Function that returns the image_id and image of a specific augmented image from the agumented image dataset"
 
-        image_id = self.annotations[
-            self.annotations["og_id"]
-            == og_idx & self.annotations["augmented_id"]
+        image_id = self.annotations_df[
+            self.annotation_df["og_id"]
+            == og_idx & self.annotations_df["augmented_id"]
             == aug_idx
         ]["image_id"]
         img_path = os.path.join(self.image_dir, image_id)

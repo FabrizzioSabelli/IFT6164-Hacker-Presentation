@@ -1,5 +1,3 @@
-import numpy
-import torch
 import torch.functional as F
 
 
@@ -11,6 +9,7 @@ def FGSM(model, x, y, epsilon):
     for param in model.parameters():
         param.requires_grad = False
 
+    x.zero_grad()  # remove the previous gradients
     output = model(x)
     loss = F.nll_loss(output, y)
     loss.backward()
