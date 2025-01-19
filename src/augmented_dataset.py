@@ -2,10 +2,11 @@ from torch.utils.data import Dataset
 import pandas as pd
 import os
 import torch
+import shutil
 
 
 class AugmentedDataset(Dataset):
-    def __init__(self, annotations_path, image_dir, init_size):
+    def __init__(self, annotations_path, image_dir, init_size, reservoir_sampling=None):
         """
         Args:
             annotations (str): CSV file containing image file name and corresponding label.
@@ -19,6 +20,7 @@ class AugmentedDataset(Dataset):
         self.annotations_path = annotations_path
         self.aug_iters = 0  # initially no augmentations
         self.init_size = init_size
+        self.reservoir_sampling = reservoir_sampling
 
     def reservoir_sampling(self, dataset, idx):
         pass
@@ -28,11 +30,9 @@ class AugmentedDataset(Dataset):
         oracle,
         substitute,
         lambda_=0.1,
-        reservoir_sampling=False,
-        overwrite=False,
     ):
 
-        if reservoir_sampling:
+        if self.reservoir_sampling is not None:
             # dataset = self.reservoir_sampling(dataset, idx)
             pass
 
@@ -40,12 +40,11 @@ class AugmentedDataset(Dataset):
             sample_size = self.__len__()
 
         # create new directory to save. If replace true then we overwrite the previous directory
-        try:
-            os.makedirs(
-                os.path.join(self.image_dir, str(self.aug_iters)), exist_ok=overwrite
-            )
-        except OSError:
-            raise OSError("Directory already exists.")
+        folder = self.image_dir + "/" + f"it{tmp_aug_iters}"
+        # if it exists then delete it
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
+        os.makedirs(folder, exist_ok=True)  # create it
 
         tmp_aug_iters = self.aug_iters + 1
 
@@ -63,11 +62,12 @@ class AugmentedDataset(Dataset):
 
             new_idx = sample_size + idx
             new_image_id = f"image_{new_idx}"
+            new_image_path = folder + "/" + new_image_id
 
             # save new image
             torch.save(
                 x_new,
-                os.path.join(self.image_dir, str(tmp_aug_iters), f"{new_image_id}.pt"),
+                new_image_path,
             )
 
             # predict or forward
