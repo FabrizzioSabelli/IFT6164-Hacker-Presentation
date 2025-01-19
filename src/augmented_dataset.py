@@ -2,28 +2,26 @@ from torch.utils.data import Dataset
 import pandas as pd
 import os
 import torch
+import tqdm.notebook as tqdm
+from torch.utils.data import DataLoader, random_split
+from .model.oracle import DNNOracle
 
 
 class AugmentedDataset(Dataset):
-    def __init__(self, annotations_path, image_dir, init_size, augmented_iters):
+    def __init__(self, annotations_path, image_dir, init_size):
         """
         Args:
             annotations (str): CSV file containing image file name and corresponding label.
             img_dir (str): Directory with all the images represented as tensors.
             init_size (int): Number of images in the initial dataset.
-            augmented_iters (int): Number of iterations of Jacobian augmentation
         """
         self.annotations = pd.read_csv(
             annotations_path
         )  # columns ["image_id", "label", "og_id", "augmented_id"]
         self.image_dir = image_dir
         self.annotations_path = annotations_path
-        self.aug_iters = augmented_iters
+        self.aug_iters = 0  # initially no augmentations
         self.init_size = init_size
-
-    def query_oracle(oracle, x):
-
-        return oracle(x)
 
     def reservoir_sampling(self, dataset, idx):
         pass
@@ -31,7 +29,8 @@ class AugmentedDataset(Dataset):
     def jacobian_augmentation(
         self,
         oracle,
-        lambda_=1,
+        substitute,
+        lambda_=0.1,
         reservoir_sampling=False,
         overwrite=False,
     ):
@@ -55,17 +54,15 @@ class AugmentedDataset(Dataset):
 
         new_annotations = []
 
-        # TODO batch this
+        # TODO this should work
         for idx in sample_size:
 
             x, y = self.__getitem__(idx)
 
             jacobian = torch.autograd.functional.jacobian(
-                self, x
-            )  # jacobian with respect to x or the paramters? Probably parameters
-            x_new = x + lambda_ * torch.sign(
-                jacobian[y]
-            )  # TODO check if this is the column
+                substitute, x.unsqueeze(0).unsqueeze(0)
+            )  # unsqueeze twice for batch
+            x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
 
             new_idx = sample_size + idx
             new_image_id = f"image_{new_idx}"
@@ -76,12 +73,13 @@ class AugmentedDataset(Dataset):
                 os.path.join(self.image_dir, str(tmp_aug_iters), f"{new_image_id}.pt"),
             )
 
-            y_new = self.query_oracle(x_new, oracle)
+            # predict or forward
+            y_new = oracle(x_new)
 
             new_annotations.append(
                 {
                     "image_id": new_image_id,
-                    "label": y_new,
+                    "oracle_label": y_new,
                     "og_id": new_idx % self.init_size,
                     "augmented_id": tmp_aug_iters,
                 }
@@ -93,7 +91,6 @@ class AugmentedDataset(Dataset):
         # save the new image annotations
         self.annotations = pd.concat([self.annotations, new_annotations])
         self.annotations.to_csv(self.annotations_path, index=False)
-        return x, y
 
     def __len__(self):
         return len(self.annotations.index)
