@@ -107,8 +107,10 @@ class AugmentedDataset(Dataset):
         aug_id = idx // self.init_size
 
         image_name = f"image_{idx}.pt"
-        img_path = os.path.join(self.image_dir, aug_id, image_name)
-        label = self.annotations.iloc[idx]["label"]
+        img_path = os.path.join(
+            self.image_dir, f"{aug_id}", image_name
+        )  # needs to be a string
+        label = self.annotations.iloc[idx]["oracle_label"]
 
         # Load the image
         image = torch.load(img_path)
