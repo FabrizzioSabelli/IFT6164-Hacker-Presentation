@@ -108,10 +108,12 @@ class AugmentedDataset(Dataset):
 
         image_name = f"image_{idx}.pt"
         folder = f"it{aug_id}"
+        print(type(image_name))
+        print(type(folder))
+        print(type(self.image_dir))
         img_path = os.path.join(
-            str(self.image_dir), str(folder), str(image_name)
+            self.image_dir, folder, image_name
         )  # needs to be a string
-        print(img_path)
         label = self.annotations.iloc[idx]["oracle_label"]
 
         # Load the image
