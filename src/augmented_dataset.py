@@ -60,7 +60,7 @@ class AugmentedDataset(Dataset):
             x, y = self.__getitem__(idx)
 
             jacobian = torch.autograd.functional.jacobian(
-                substitute, x.unsqueeze(0).unsqueeze(0)
+                substitute, x
             )  # unsqueeze twice for batch
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
 
@@ -75,7 +75,7 @@ class AugmentedDataset(Dataset):
             )
 
             # predict or forward
-            y_new = oracle(x_new)
+            y_new = oracle.predict(x_new)
 
             new_annotations.append(
                 {
