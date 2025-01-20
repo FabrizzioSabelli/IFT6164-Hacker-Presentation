@@ -54,13 +54,13 @@ class AugmentedDataset(Dataset):
 
         new_annotations = []
 
-        # TODO this should work
+        # TODO modify later for CIFAR-10
         for idx in range(sample_size):
 
             x, y = self.__getitem__(idx)
 
             jacobian = torch.autograd.functional.jacobian(
-                substitute, x
+                substitute, x.unsqueeze(0)
             )  # unsqueeze twice for batch
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
 
