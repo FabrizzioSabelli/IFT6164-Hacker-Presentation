@@ -43,14 +43,14 @@ class AugmentedDataset(Dataset):
         else:
             sample_size = self.__len__()
 
+        tmp_aug_iters = self.aug_iters + 1
+
         # create new directory to save. If replace true then we overwrite the previous directory
         folder = self.image_dir + "/" + f"it{tmp_aug_iters}"
         # if it exists then delete it
         if os.path.exists(folder):
             shutil.rmtree(folder)
         os.makedirs(folder, exist_ok=True)  # create it
-
-        tmp_aug_iters = self.aug_iters + 1
 
         new_annotations = []
 
