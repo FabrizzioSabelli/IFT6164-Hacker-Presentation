@@ -27,7 +27,7 @@ class AugmentedDataset(Dataset):
 
     def set_oracle_values(self, oracle_values):
         self.annotations_df["oracle_label"] = oracle_values
-        self.annotation_df.to_csv(self.annotations_path, index=False)
+        self.annotations_df.to_csv(self.annotations_path, index=False)
 
     def jacobian_augmentation(
         self,
