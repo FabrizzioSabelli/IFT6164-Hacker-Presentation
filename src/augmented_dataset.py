@@ -55,7 +55,7 @@ class AugmentedDataset(Dataset):
         new_annotations = []
 
         # TODO this should work
-        for idx in sample_size:
+        for idx in range(sample_size):
 
             x, y = self.__getitem__(idx)
 
