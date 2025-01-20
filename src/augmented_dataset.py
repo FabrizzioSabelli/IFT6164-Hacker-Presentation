@@ -67,7 +67,7 @@ class AugmentedDataset(Dataset):
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
 
             new_idx = sample_size + idx
-            new_image_id = f"image_{new_idx}"
+            new_image_id = f"image_{new_idx}.pt"
             new_image_path = folder + "/" + new_image_id
 
             # save new image
