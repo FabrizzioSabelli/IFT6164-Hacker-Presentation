@@ -16,9 +16,9 @@ class AdversarialDataset(Dataset):
             testloader (DataLoader): DataLoader with og images that will be used to create adversial images
             image_dir (str): Directory where to put adversial images with attack type in name
         """
-        self.annotations_df = pd.read_csv(
-            image_dir + "/annotations.csv"
-        )  # columns ["adversial_id", "image_id","adversial_label", "sub_label", "oracle_label"]
+        # self.annotations_df = pd.read_csv(
+        #    image_dir + "/annotations.csv"
+        # )  # columns ["adversial_id", "image_id","adversial_label", "sub_label", "oracle_label"]
         self.testloader = testloader
 
     def __len__(self):
