@@ -174,7 +174,7 @@ class AdversarialDataset(Dataset):
 
         return attack_sucess
 
-    def FGSM(model, x, y, epsilon):
+    def FGSM(self, model, x, y, epsilon):
         # gradient with respect to input only to save compute
         x.requires_grad = True
         for param in model.parameters():
