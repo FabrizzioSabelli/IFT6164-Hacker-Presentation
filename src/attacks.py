@@ -120,6 +120,7 @@ class AdversarialDataset(Dataset):
 
                 y_substitute_idx = y_substitute[idx_1]
                 y_oracle_idx = y_oracle[idx_1]
+                y_idx = y[idx_1]
 
                 new_idx = idx_1 + idx_0 * batch_size
                 new_image_id = f"image_{new_idx}.pt"
@@ -135,8 +136,8 @@ class AdversarialDataset(Dataset):
                     {
                         "adversial_id": new_idx,
                         "image_id": new_idx,
-                        "sub_label": y.item(),  # y_substitute_idx.item(),
-                        "oracle_label": y.item(),  # y_oracle_idx.item(),
+                        "sub_label": y_idx.item(),  # y_substitute_idx.item(),
+                        "oracle_label": y_idx.item(),  # y_oracle_idx.item(),
                         "adv_sub_label": y_substitute_adv_idx.item(),
                         "adv_oracle_label": y_oracle_adv_idx.item(),
                     }
