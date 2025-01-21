@@ -60,11 +60,14 @@ class AugmentedDataset(Dataset):
             x, y = self.__getitem__(idx)
 
             jacobian = torch.autograd.functional.jacobian(
-                substitute, x.unsqueeze(0)
+                substitute, x.unsqueeze(dim=0)
             ).squeeze(
                 dim=0
             )  # unsqueeze twice for batch
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
+            print(f"Jacobian shape: {x_new.shape}")
+            print(f"x shape: {x.shape}")
+            breakpoint()
 
             new_idx = sample_size + idx
             new_image_id = f"image_{new_idx}.pt"
