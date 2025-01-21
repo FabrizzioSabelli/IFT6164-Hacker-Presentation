@@ -66,7 +66,7 @@ class AdversarialDataset(Dataset):
             y_substitute = substitute.predict(x)
             y_oracle = oracle.predict(x)
 
-            for idx in range(batch_size):
+            for idx in range(x.shape[0]):
 
                 x_adv_idx = x_adv[
                     idx
