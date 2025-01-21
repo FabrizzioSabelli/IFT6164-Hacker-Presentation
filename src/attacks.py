@@ -55,7 +55,12 @@ class AdversarialDataset(Dataset):
 
         # create the adversial images
         for idx_0, (x, y) in enumerate(
-            tqdm(self.testloader, desc="Creating attacks", leave=False, unit="batch")
+            tqdm(
+                self.testloader,
+                desc="Creating and saving attacks",
+                leave=False,
+                unit="batch",
+            )
         ):
             x, y = x.to(device), y.to(device)
             substitute.to(device)
@@ -106,15 +111,14 @@ class AdversarialDataset(Dataset):
         self.annotations_df.to_csv(self.image_dir + "/annotations.csv", index=False)
 
         # return transferability and attack success rate on oracle and substitute
-        substitute_success_frac = self.annotations_df[
-            [self.annotations_df["sub_label"] == self.annotations_df["adv_sub_label"]]
-        ].sum()
-        oracle_success_frac = self.annotations_df[
-            [
-                self.annotations_df["oracle_label"]
-                == self.annotations_df["adv_oracle_label"]
-            ]
-        ].sum()
+        substitute_success_frac = (
+            self.annotations_df["sub_label"] == self.annotations_df["adv_sub_label"]
+        ).sum()
+
+        oracle_success_frac = (
+            self.annotations_df["oracle_label"]
+            == self.annotations_df["adv_oracle_label"]
+        ).sum()
         substitute_success = substitute_success_frac / len(self.annotations_df.index)
         oracle_success_succss = oracle_success_frac / len(self.annotations_df.index)
 
@@ -147,7 +151,7 @@ class AdversarialDataset(Dataset):
             oracle_true.append(oracle.predict(x))
 
         oracle_adversial = []
-        for idx, (x, y) in enumerate(
+        for idx, x in enumerate(
             tqdm(
                 adversial_loader,
                 desc="Adversial Oracle requests",
@@ -160,16 +164,14 @@ class AdversarialDataset(Dataset):
             # get the true labels to compare later
             oracle_adversial.append(oracle.predict(x))
 
-        # TODO test this
-
         oracle_true_np = np.array(oracle_true)
         oracle_adversial_np = np.array(oracle_adversial)
 
         # Find the indices where the arrays differ
-        different_positions = np.where(oracle_true_np != oracle_adversial_np)[0]
+        num_same_positions = np.sum(oracle_true_np == oracle_adversial_np)
 
         # Count the number of different positions
-        attack_success_frac = len(different_positions)
+        attack_success_frac = len(num_same_positions)
         attack_sucess = attack_success_frac / len(self.annotations_df.index)
         print(
             f"Oracle attack success rate: {attack_sucess}, fraction: {attack_success_frac}/{len(self.annotations_df.index)}"
