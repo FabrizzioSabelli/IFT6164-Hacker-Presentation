@@ -180,7 +180,6 @@ class AdversarialDataset(Dataset):
         for param in model.parameters():
             param.requires_grad = False
 
-        x.zero_grad()  # remove the previous gradients
         output = model(x)
         loss = cross_entropy(output, y)
         loss.backward()
