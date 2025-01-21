@@ -10,6 +10,7 @@ import os
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix
 import sklearn.metrics as metrics
+import foolbox as fb
 
 
 class jointDataset(Dataset):
@@ -73,7 +74,7 @@ class AdversarialDataset(Dataset):
         return pd.read_csv(annotations_path)
 
     # Fast-Gradient Sign Method for computing adversial attacks
-    def attack_FGSM(self, substitute, oracle, epsilon, batch_size=32):
+    def attack_FGSM(self, substitute, oracle, epsilon, batch_size=32, fb=False):
         """Create the Black box attack and returns the success rate on the subsititute and the transferability to the oracle"""
 
         device = (
@@ -102,6 +103,9 @@ class AdversarialDataset(Dataset):
             x, y = x.to(device), y.to(device)
             substitute.to(device)
 
+            # if fb:
+            #    x_adv = fb.attacks.FGSM()
+            # else:
             x_adv = self.FGSM(model=substitute, x=x, y=y, epsilon=epsilon)
 
             # get the true labels to compare later
@@ -131,8 +135,8 @@ class AdversarialDataset(Dataset):
                     {
                         "adversial_id": new_idx,
                         "image_id": new_idx,
-                        "sub_label": y_substitute_idx.item(),
-                        "oracle_label": y_oracle_idx.item(),
+                        "sub_label": y.item(),  # y_substitute_idx.item(),
+                        "oracle_label": y.item(),  # y_oracle_idx.item(),
                         "adv_sub_label": y_substitute_adv_idx.item(),
                         "adv_oracle_label": y_oracle_adv_idx.item(),
                     }
