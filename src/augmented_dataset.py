@@ -64,9 +64,6 @@ class AugmentedDataset(Dataset):
             ).squeeze()  # remove all the 1s
             # jacobian input (batch_size, num_channels, height, width) output (batch_size, num_output, batch_size, num_channels, height, width)
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
-            print(f"Jacobian shape: {x_new.shape}")
-            print(f"x shape: {x.shape}")
-            breakpoint()
 
             new_idx = sample_size + idx
             new_image_id = f"image_{new_idx}.pt"
