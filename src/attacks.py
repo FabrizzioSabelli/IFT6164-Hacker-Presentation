@@ -10,7 +10,8 @@ import os
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix
 import sklearn.metrics as metrics
-import foolbox as fb
+
+# import foolbox as fb
 
 
 class jointDataset(Dataset):
