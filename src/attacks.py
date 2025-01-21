@@ -89,10 +89,10 @@ class AdversarialDataset(Dataset):
                     {
                         "adversial_id": new_idx,
                         "image_id": new_idx,
-                        "sub_label": y_substitute_idx,
-                        "oracle_label": y_oracle_idx,
-                        "adv_sub_label": y_substitute_adv_idx,
-                        "adv_oracle_label": y_oracle_adv_idx,
+                        "sub_label": y_substitute_idx.item(),
+                        "oracle_label": y_oracle_idx.item(),
+                        "adv_sub_label": y_substitute_adv_idx.item(),
+                        "adv_oracle_label": y_oracle_adv_idx.item(),
                     }
                 )
 
@@ -101,7 +101,6 @@ class AdversarialDataset(Dataset):
                     x_adv_idx,
                     new_image_path,
                 )
-                breakpoint()
 
         self.annotations_df = pd.DataFrame(rows)
         self.annotations_df.to_csv(self.image_dir + "/annotations.csv", index=False)
