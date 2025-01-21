@@ -53,7 +53,7 @@ class AugmentedDataset(Dataset):
         os.makedirs(folder, exist_ok=True)  # create it
 
         new_annotations = []
-
+        dataset_size = len(self.annotations_df.index)
         # TODO modify later for CIFAR-10
         for idx in range(sample_size):
 
@@ -65,7 +65,7 @@ class AugmentedDataset(Dataset):
             # jacobian input (batch_size, num_channels, height, width) output (batch_size, num_output, batch_size, num_channels, height, width)
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
 
-            new_idx = sample_size + idx
+            new_idx = dataset_size + idx
             new_image_id = f"image_{new_idx}.pt"
             new_image_path = folder + "/" + new_image_id
 
