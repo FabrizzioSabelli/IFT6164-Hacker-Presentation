@@ -19,6 +19,7 @@ class AdversarialDataset(Dataset):
         # self.annotations_df = pd.read_csv(
         #    image_dir + "/annotations.csv"
         # )  # columns ["adversial_id", "image_id","adversial_label", "sub_label", "oracle_label"]
+        self.image_dir = image_dir
         self.testloader = testloader
 
     def __len__(self):
