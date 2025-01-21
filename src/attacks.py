@@ -9,7 +9,7 @@ from torch.nn.functional import cross_entropy
 import os
 
 
-class AdversialDataset(Dataset):
+class AdversarialDataset(Dataset):
     def __init__(self, testloader, image_dir):
         """
         Args:
@@ -17,7 +17,7 @@ class AdversialDataset(Dataset):
             image_dir (str): Directory where to put adversial images with attack type in name
         """
         self.annotations_df = pd.read_csv(
-            image_dir + +"/annotations.csv"
+            image_dir + "/annotations.csv"
         )  # columns ["adversial_id", "image_id","adversial_label", "sub_label", "oracle_label"]
         self.testloader = testloader
 
@@ -172,3 +172,26 @@ class AdversialDataset(Dataset):
         )
 
         return attack_sucess
+
+    def FGSM(model, x, y, epsilon):
+        # gradient with respect to input only to save compute
+        x.requires_grad = True
+        for param in model.parameters():
+            param.requires_grad = False
+
+        x.zero_grad()  # remove the previous gradients
+        output = model(x)
+        loss = cross_entropy(output, y)
+        loss.backward()
+
+        # set it back to prevent bugs
+        for param in model.parameters():
+            param.requires_grad = True
+
+        # create adversial examples
+        x_adv = x + epsilon * x.grad.sign()
+        return x_adv
+
+    # Saliency attack from Papernot et al.
+    def saliency_map():
+        pass
