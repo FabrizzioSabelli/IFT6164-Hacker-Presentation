@@ -72,6 +72,9 @@ class AdversarialDataset(Dataset):
                     idx
                 ]  # test if this gets the correct image depending on all sizes
 
+                y_substitute_idx = y_substitute[idx]
+                y_oracle_idx = y_oracle[idx]
+
                 new_idx = idx + idx * batch_size
                 new_image_id = f"image_{new_idx}"
                 new_image_path = self.image_dir + "/" + new_image_id
@@ -79,17 +82,17 @@ class AdversarialDataset(Dataset):
                 x_adv_idx.to(device)
 
                 # get the true labels to compare later
-                y_substitute_adv = substitute.predict(x_adv_idx)
-                y_oracle_adv = oracle.predict(x_adv_idx)
+                y_substitute_adv_idx = substitute.predict(x_adv_idx)
+                y_oracle_adv_idx = oracle.predict(x_adv_idx)
 
                 rows.append(
                     {
                         "adversial_id": new_idx,
                         "image_id": idx,
-                        "sub_label": y_substitute,
-                        "oracle_label": y_oracle,
-                        "adv_sub_label": y_substitute_adv,
-                        "adv_oracle_label": y_oracle_adv,
+                        "sub_label": y_substitute_idx,
+                        "oracle_label": y_oracle_idx,
+                        "adv_sub_label": y_substitute_adv_idx,
+                        "adv_oracle_label": y_oracle_adv_idx,
                     }
                 )
 
@@ -98,6 +101,7 @@ class AdversarialDataset(Dataset):
                     x_adv_idx,
                     new_image_path,
                 )
+                breakpoint()
 
         self.annotations_df = pd.DataFrame(rows)
         self.annotations_df.to_csv(self.image_dir + "/annotations.csv", index=False)
