@@ -54,7 +54,7 @@ class AdversarialDataset(Dataset):
         os.makedirs(self.image_dir, exist_ok=True)
 
         # create the adversial images
-        for idx, (x, y) in enumerate(
+        for idx_0, (x, y) in enumerate(
             tqdm(self.testloader, desc="Creating attacks", leave=False, unit="batch")
         ):
             x, y = x.to(device), y.to(device)
@@ -66,17 +66,17 @@ class AdversarialDataset(Dataset):
             y_substitute = substitute.predict(x)
             y_oracle = oracle.predict(x)
 
-            for idx in range(x.shape[0]):
+            for idx_1 in range(x.shape[0]):
 
                 x_adv_idx = x_adv[
-                    idx
+                    idx_1
                 ]  # test if this gets the correct image depending on all sizes
 
-                y_substitute_idx = y_substitute[idx]
-                y_oracle_idx = y_oracle[idx]
+                y_substitute_idx = y_substitute[idx_1]
+                y_oracle_idx = y_oracle[idx_1]
 
-                new_idx = idx + idx * batch_size
-                new_image_id = f"image_{new_idx}"
+                new_idx = idx_1 + idx_0 * batch_size
+                new_image_id = f"image_{new_idx}.pt"
                 new_image_path = self.image_dir + "/" + new_image_id
 
                 x_adv_idx.to(device)
@@ -88,7 +88,7 @@ class AdversarialDataset(Dataset):
                 rows.append(
                     {
                         "adversial_id": new_idx,
-                        "image_id": idx,
+                        "image_id": new_idx,
                         "sub_label": y_substitute_idx,
                         "oracle_label": y_oracle_idx,
                         "adv_sub_label": y_substitute_adv_idx,
