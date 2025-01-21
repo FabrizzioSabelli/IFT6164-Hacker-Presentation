@@ -137,8 +137,9 @@ class AdversarialDataset(Dataset):
                     {
                         "adversial_id": new_idx,
                         "image_id": new_idx,
-                        "sub_label": y_idx.item(),  # y_substitute_idx.item(),
-                        "oracle_label": y_idx.item(),  # y_oracle_idx.item(),
+                        "true_label": y_idx.item(),
+                        "sub_label": y_substitute_idx.item(),
+                        "oracle_label": y_oracle_idx.item(),
                         "adv_sub_label": y_substitute_adv_idx.item(),
                         "adv_oracle_label": y_oracle_adv_idx.item(),
                     }
@@ -154,26 +155,36 @@ class AdversarialDataset(Dataset):
         annotations_df.to_csv(image_path + "/annotations.csv", index=False)
 
         # return transferability and attack success rate on oracle and substitute
+        # only check the attack if the model get the true label correct
+
+        total_correct_sub = annotations_df["true_label"] == annotations_df["sub_label"]
         substitute_success_frac = (
-            annotations_df["sub_label"] != annotations_df["adv_sub_label"]
+            annotations_df["sub_label"]
+            != annotations_df["adv_sub_label"]
+            & (annotations_df["true_label"] == annotations_df["sub_label"])
         ).sum()
 
+        total_correct_oracle = (
+            annotations_df["true_label"] == annotations_df["oracle_label"]
+        )
         oracle_success_frac = (
-            annotations_df["oracle_label"] != annotations_df["adv_oracle_label"]
+            annotations_df["oracle_label"]
+            != annotations_df["adv_oracle_label"]
+            & (annotations_df["true_label"] == annotations_df["oracle_label"])
         ).sum()
-        substitute_success = substitute_success_frac / len(annotations_df.index)
-        oracle_success_succss = oracle_success_frac / len(annotations_df.index)
+        substitute_success = substitute_success_frac / total_correct_sub
+        oracle_success_succss = oracle_success_frac / total_correct_oracle
 
         print(
-            f"Substitute attack success rate: {substitute_success}, fraction: {substitute_success_frac}/{len(annotations_df.index)}"
+            f"Epsilon: {epsilon} Substitute attack success rate: {substitute_success}, fraction: {substitute_success_frac}/{total_correct_sub}"
         )
         print(
-            f"Oracle attack success rate: {oracle_success_succss}, fraction: {oracle_success_frac}/{len(annotations_df.index)}"
+            f"Epsilon: {epsilon} Oracle attack success rate: {oracle_success_succss}, fraction: {oracle_success_frac}/{total_correct_oracle}"
         )
 
         # attack finished
         self.epsilons_fgsm.append(epsilon)
-        self.epsilons_fgsm.sort()  # sort the list for future use
+        self.epsilons_fgsm = list(set(self.epsilons_fgsm))
         return substitute_success, oracle_success_succss
 
     def test_transferability(self, oracle, epsilon, attack_type, batch_size=32):
@@ -257,6 +268,7 @@ class AdversarialDataset(Dataset):
 
         # set attack type to get correct folder
         self.attack_type = attack_type
+        epsilons.sort()  # sort the list for future use
 
         # this should sorted in increasing order
         for i, epsilon in enumerate(epsilons):
@@ -293,6 +305,8 @@ class AdversarialDataset(Dataset):
 
         # set attack type to get correct folder
         self.attack_type = attack_type
+        epsilons.sort()  # sort the list for future use
+
         # this should sorted in increasing order
         for i, epsilon in enumerate(epsilons):
             # set epsilon value to go into correct folder
