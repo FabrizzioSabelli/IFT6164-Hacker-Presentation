@@ -61,9 +61,8 @@ class AugmentedDataset(Dataset):
 
             jacobian = torch.autograd.functional.jacobian(
                 substitute, x.unsqueeze(dim=0)
-            ).squeeze(
-                dim=0
-            )  # unsqueeze twice for batch
+            ).squeeze()  # remove all the 1s
+            # jacobian input (batch_size, num_channels, height, width) output (batch_size, num_output, batch_size, num_channels, height, width)
             x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
             print(f"Jacobian shape: {x_new.shape}")
             print(f"x shape: {x.shape}")
