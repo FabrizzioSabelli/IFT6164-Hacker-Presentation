@@ -41,7 +41,7 @@ class AugmentedDataset(Dataset):
             pass
 
         else:
-            sample_size = self.__len__()
+            sample_size = self.init_size
 
         tmp_aug_iters = self.aug_iters + 1
 
