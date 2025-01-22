@@ -1,4 +1,4 @@
-from src.tils import set_seed
+from src.utils import set_seed
 from src.dataloaders import load_cifar10_dataset
 from src.models import Oracle, Substitute, DummyCNN
 from src.train import train_substitute
