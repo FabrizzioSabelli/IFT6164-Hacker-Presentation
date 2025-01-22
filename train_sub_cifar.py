@@ -23,16 +23,16 @@ def main():
         input_shape=(3, 32, 32),
         num_classes=10,
     )
-    c10_oracle = Oracle("classifier_weights/c10_resnext.pth")
+    c10_oracle = Oracle("share/classifier_weights/c10_resnext.pth")
     train_loader, val_loader, test_loader, final_loader, augmented_dataset = (
         load_cifar10_dataset(
             batch_size=batch_size,
             validation_split=val_split,
             sub_set_size=sub_set_size,
-            save_substitute_path="data/CIFAR-10/substitute/arch_dnn_0",
+            save_substitute_path="share/data/CIFAR-10/substitute/arch_dnn_0",
         )
     )
-    path_to_save = "model/CIFAR-10/substitute/arch_dnn_0"
+    path_to_save = "share/model/CIFAR-10/substitute/arch_dnn_0"
     train_substitute(
         c10_sub,
         c10_oracle,

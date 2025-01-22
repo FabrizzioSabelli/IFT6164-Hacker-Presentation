@@ -24,15 +24,15 @@ def main():
         validation_split=val_split,
         sub_set_size=sub_set_size,
         download=False,
-        save_substitute_path="data/MNIST/substitute/arch_dnn_0",
+        save_substitute_path="share/data/MNIST/substitute/arch_dnn_0",
     )
-    test_oracle = Oracle("classifier_weights/mnist_cnn.pth", "cpu")
+    test_oracle = Oracle("share/classifier_weights/mnist_cnn.pth", "cpu")
     test_sub = Substitute(
-        "model/MNIST/substitute/arch_dnn_0/it6/model_epoch_10.pth", "cpu"
+        "share/model/MNIST/substitute/arch_dnn_0/it6/model_epoch_10.pth", "cpu"
     )
     test_adv_d = AdversarialDataset(
         test_set=test_dataset,
-        image_dir="data/MNIST/substitute/arch_dnn_0/adversial/fgsm",
+        image_dir="share/data/MNIST/substitute/arch_dnn_0/adversial/fgsm",
     )
     test_adv_d.attack_FGSM(substitute=test_sub, oracle=test_oracle, epsilon=epsilon)
 

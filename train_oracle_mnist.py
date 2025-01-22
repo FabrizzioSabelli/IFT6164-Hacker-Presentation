@@ -16,7 +16,7 @@ def main():
             validation_split=val_split,
             sub_set_size=sub_set_size,
             download=False,
-            save_substitute_path="data/MNIST/substitute/arch_dnn_0",
+            save_substitute_path="share/data/MNIST/substitute/arch_dnn_0",
         )
     )
 
@@ -27,13 +27,14 @@ def main():
         input_shape=(1, 28, 28),
         num_classes=10,
     )
+    # TODO change this path
     train_classifier(
         test_model,
         train_loader,
         val_loader,
         test_loader,
         save_interval=1,
-        save_name="test_mnist",
+        save_name="share/test_mnist",
     )
 
     train_loader, val_loader, test_loader, final_loader, augmented_dataset = (
@@ -47,7 +48,7 @@ def main():
         smol_mnist_cnn,
         train_loader,
         val_loader,
-        "classifier_weights/small_mnist_cnn",
+        "share/classifier_weights/small_mnist_cnn",
         epochs=10,
         lr=0.001,
     )
