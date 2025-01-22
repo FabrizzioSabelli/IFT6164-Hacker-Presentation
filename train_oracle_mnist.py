@@ -1,7 +1,7 @@
-from models import DummyCNN
-from train import train_classifier
-from dataloaders import load_mnist_dataset
-from utils import set_seed
+from src.models import DummyCNN
+from src.train import train_classifier
+from src.dataloaders import load_mnist_dataset
+from src.utils import set_seed
 
 
 def main():

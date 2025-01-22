@@ -1,7 +1,7 @@
-from attacks import AdversarialDataset
-from utils import set_seed
-from dataloaders import load_mnist_dataset
-from models import Oracle, Substitute
+from src.attacks import AdversarialDataset
+from src.utils import set_seed
+from src.dataloaders import load_mnist_dataset
+from src.models import Oracle, Substitute
 
 
 def main():
