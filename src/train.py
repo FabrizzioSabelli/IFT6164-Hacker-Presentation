@@ -1,16 +1,16 @@
 # Functions used to train the classifier and substitute model
 import torch
-from utils import check_seed_setted, set_device
+from .utils import check_seed_setted, set_device
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import os
 import pandas as pd
 import shutil
-from dataloaders import load_mnist_dataset, load_cifar10_dataset
+from .dataloaders import load_mnist_dataset, load_cifar10_dataset
 from torch.utils.data import DataLoader
-from augmented_dataset import AugmentedDataset
+from .augmented_dataset import AugmentedDataset
 
 
 def train_classifier(
@@ -18,8 +18,8 @@ def train_classifier(
     train_loader,
     val_loader,
     save_name,
-    epochs=500,
-    lr=0.005,
+    epochs=200,
+    lr=0.001,
     batch_size=32,
     optimizer=None,
     scheduler=None,
@@ -59,7 +59,7 @@ def train_classifier(
 
         if val_loader is not None:
             correct, total, test_loss, accuracy = test_batches(
-                model, val_loader, criterion
+                model, val_loader, criterion, epoch=epoch
             )
 
             model_metrics_row = {
@@ -116,10 +116,9 @@ def train_batches(model, loader, optimizer, criterion, epoch):
     # create tqdm batch progress bar
     batch_progress = tqdm(
         loader,
-        desc=f"Epoch {epoch} Training",
+        desc=f"Epoch {epoch} Training ({device_name})",
         leave=False,
-        unit="batch",
-        device=device_name,
+        unit="batch"
     )
 
     # train the model
@@ -151,10 +150,9 @@ def test_batches(model, loader, criterion, epoch):
     # create tqdm batch progress bar
     batch_progress = tqdm(
         loader,
-        desc=f"Epoch {epoch} Testing",
+        desc=f"Epoch {epoch} Testing {device_name}",
         leave=False,
         unit="batch",
-        device=device_name,
     )
     with torch.no_grad():
         for data, target in batch_progress:
@@ -312,7 +310,7 @@ def train_substitute(
                 test_loader=test_loader,
                 epoch=i,
                 model_metrics=model_metrics,
-                epoch_progress=epoch_progress,
+                epoch_progress=epoch_progress
             )
 
     if len(model_metrics) > 0:
@@ -325,7 +323,7 @@ def test_subsitute(substitute, test_loader, epoch, model_metrics: list, epoch_pr
     # sanity check as this should go up
 
     correct, total, test_loss, accuracy = test_batches(
-        substitute, test_loader, criterion=nn.CrossEntropyLoss()
+        substitute, test_loader, criterion=nn.CrossEntropyLoss(), epoch=epoch
     )
 
     model_metrics_row = {

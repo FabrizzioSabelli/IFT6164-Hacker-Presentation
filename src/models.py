@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+from .utils import get_device
 
 class DummyCNN(nn.Module):
     def __init__(
@@ -78,14 +78,13 @@ class Oracle(nn.Module):
     def __init__(self, file_path: str):  # device: str = "cuda"):
         super(Oracle, self).__init__()
         # Load the state dictionary
-        # self.device = device
-        # self.to(torch.device(device))
+        self.device = get_device()
         self.classifier = torch.load(file_path)
 
     def forward(self, x):
         if x.device != self.device:
-            x_dev = x.to(self.device)
-        return self.classifier.forward(x_dev)
+            return self.classifier.forward(x.to(self.device))
+        return self.classifier.forward(x)
 
     def predict(self, image: torch.Tensor):
 
@@ -105,3 +104,126 @@ class Substitute(Oracle):
 
     def __init__(self, file_path: str):
         super().__init__(file_path)
+
+class ResNeXtBlock(nn.Module):
+    expansion = 1
+
+    def __init__(
+        self, in_channels, out_channels, stride=1, downsample=None, cardinality=32
+    ):
+        super(ResNeXtBlock, self).__init__()
+        D = out_channels // cardinality  # Dimension of each group
+
+        self.conv1 = nn.Conv2d(
+            in_channels, D * cardinality, kernel_size=1, stride=1, bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(D * cardinality)
+
+        self.conv2 = nn.Conv2d(
+            D * cardinality,
+            D * cardinality,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=cardinality,
+            bias=False,
+        )
+        self.bn2 = nn.BatchNorm2d(D * cardinality)
+
+        self.conv3 = nn.Conv2d(
+            D * cardinality, out_channels, kernel_size=1, stride=1, bias=False
+        )
+        self.bn3 = nn.BatchNorm2d(out_channels)
+
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+
+    def forward(self, x):
+        identity = x
+        if self.downsample is not None:
+            identity = self.downsample(x)
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+
+        out = self.conv3(out)
+        out = self.bn3(out)
+
+        out += identity
+        out = self.relu(out)
+
+        return out
+
+
+class ResNeXt(nn.Module):
+    def __init__(self, block, layers, num_classes=10, cardinality=32, dropout=0.1):
+        super(ResNeXt, self).__init__()
+        self.in_channels = 64
+
+        # Initial convolution tailored for CIFAR-10
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+
+        self.layer1 = self._make_layer(block, 64, layers[0], cardinality)
+        self.layer2 = self._make_layer(block, 128, layers[1], cardinality, stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], cardinality, stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], cardinality, stride=2)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.dropout = nn.Dropout(p=dropout)
+        self.fc1 = nn.Linear(512 * block.expansion, num_classes)
+
+    def _make_layer(self, block, out_channels, blocks, cardinality, stride=1):
+        downsample = None
+        if stride != 1 or self.in_channels != out_channels * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(
+                    self.in_channels,
+                    out_channels * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.BatchNorm2d(out_channels * block.expansion),
+            )
+
+        layers = []
+        layers.append(
+            block(self.in_channels, out_channels, stride, downsample, cardinality)
+        )
+        self.in_channels = out_channels * block.expansion
+        for _ in range(1, blocks):
+            layers.append(
+                block(self.in_channels, out_channels, cardinality=cardinality)
+            )
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.dropout(x)
+        x = self.fc1(x)
+
+        return x
+
+
+def resnext18_cifar10(num_classes=10, cardinality=32):
+    return ResNeXt(
+        ResNeXtBlock, [2, 2, 2, 2], num_classes=num_classes, cardinality=cardinality
+    )
