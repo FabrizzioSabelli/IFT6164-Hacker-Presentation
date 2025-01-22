@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+from .utils import get_device
 
 class DummyCNN(nn.Module):
     def __init__(
@@ -78,14 +78,13 @@ class Oracle(nn.Module):
     def __init__(self, file_path: str):  # device: str = "cuda"):
         super(Oracle, self).__init__()
         # Load the state dictionary
-        # self.device = device
-        # self.to(torch.device(device))
+        self.device = get_device()
         self.classifier = torch.load(file_path)
 
     def forward(self, x):
         if x.device != self.device:
-            x_dev = x.to(self.device)
-        return self.classifier.forward(x_dev)
+            return self.classifier.forward(x.to(self.device))
+        return self.classifier.forward(x)
 
     def predict(self, image: torch.Tensor):
 

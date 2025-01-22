@@ -4,8 +4,8 @@ from torchvision import datasets, transforms
 import os
 import pandas as pd
 import shutil
-from augmented_dataset import AugmentedDataset
-from utils import check_seed_setted
+from .augmented_dataset import AugmentedDataset
+from .utils import check_seed_setted
 
 # TODO potentially make saving the files to google drive
 
@@ -30,10 +30,10 @@ def load_mnist_dataset(
         ]
     )
     full_train_dataset = datasets.MNIST(
-        root="./data", train=True, download=download, transform=transform
+        root="share/data", train=True, download=download, transform=transform
     )
     full_test_dataset = datasets.MNIST(
-        root="./data", train=False, download=download, transform=transform
+        root="share/data", train=False, download=download, transform=transform
     )
     # Split the training dataset into training and validation datasets
     total_train_size = len(full_train_dataset)
@@ -101,7 +101,7 @@ def load_mnist_dataset(
             dataset=aug_dataset, batch_size=batch_size, shuffle=True
         )
 
-    return train_loader, val_loader, test_loader, final_loader, aug_dataset
+    return train_loader, val_loader, test_loader, test_dataset, final_loader, aug_dataset
 
 
 def load_cifar10_dataset(
