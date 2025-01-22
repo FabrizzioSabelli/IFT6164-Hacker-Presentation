@@ -1,7 +1,7 @@
-from utils import set_seed
-from dataloaders import load_cifar10_dataset
-from models import Oracle, Substitute, DummyCNN
-from train import train_substitute
+from src.utils import set_seed
+from src.dataloaders import load_cifar10_dataset
+from src.models import Oracle, Substitute, DummyCNN
+from src.train import train_substitute
 
 
 def main():

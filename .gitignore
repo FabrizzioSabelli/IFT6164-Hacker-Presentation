@@ -1,1 +1,4 @@
 .env
+share
+__pycache__
+*.pyc
