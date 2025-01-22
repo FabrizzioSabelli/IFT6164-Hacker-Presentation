@@ -30,10 +30,10 @@ def load_mnist_dataset(
         ]
     )
     full_train_dataset = datasets.MNIST(
-        root="./data", train=True, download=download, transform=transform
+        root="./share/data", train=True, download=download, transform=transform
     )
     full_test_dataset = datasets.MNIST(
-        root="./data", train=False, download=download, transform=transform
+        root="./share/data", train=False, download=download, transform=transform
     )
     # Split the training dataset into training and validation datasets
     total_train_size = len(full_train_dataset)
@@ -105,7 +105,11 @@ def load_mnist_dataset(
 
 
 def load_cifar10_dataset(
-    batch_size=64, validation_split=0.1, sub_set_size=500, save_substitute_path=None
+    batch_size=64,
+    validation_split=0.1,
+    sub_set_size=500,
+    save_substitute_path=None,
+    download=False,
 ):
     # check if seed was set
     check_seed_setted()
@@ -121,10 +125,10 @@ def load_cifar10_dataset(
         ]
     )
     full_train_dataset = datasets.CIFAR10(
-        root="./data", train=True, download=True, transform=transform
+        root="./share/data", train=True, download=download, transform=transform
     )
     full_test_dataset = datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transform
+        root="./share/data", train=False, download=download, transform=transform
     )
     # Split the training dataset into training and validation datasets
     total_train_size = len(full_train_dataset)

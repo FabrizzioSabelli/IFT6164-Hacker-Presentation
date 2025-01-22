@@ -25,8 +25,9 @@ def main():
         validation_split=val_split,
         sub_set_size=sub_set_size,
         download=False,
-        save_substitute_path="share/data/MNIST/substitute/arch_dnn_0",
+        save_substitute_path="share/data/MNIST/substitute/arch_dnn_0_F",
     )
+    # arch_dnn_0
 
     # MNIST substitute
 
