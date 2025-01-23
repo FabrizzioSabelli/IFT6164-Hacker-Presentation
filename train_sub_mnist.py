@@ -12,7 +12,7 @@ def main():
     batch_size = 32
     lambda_ = 0.1
     train_epochs = 10
-    run_name = "arch_dnn_0_T"
+    run_name = "arch_dnn_0_norm2_T"
     set_seed()
 
     (
@@ -33,13 +33,13 @@ def main():
     # MNIST substitute
 
     mnist_sub = DummyCNN(
-        [16, 32, 64, 96],
-        [192, 64],
+        [16, 32, 64],
+        [64],
         kernel_size=3,
         input_shape=(1, 28, 28),
         num_classes=10,
     )
-    mnist_oracle = Oracle("share/classifier_weights/mnist_cnn.pth")
+    mnist_oracle = Oracle("share/classifier_weights/mnist_norm_small/model_epoch_9.pth")
     train_loader, val_loader, test_loader, tets_dataset, final_loader, augmented_dataset = (
         load_mnist_dataset(
             batch_size=batch_size,

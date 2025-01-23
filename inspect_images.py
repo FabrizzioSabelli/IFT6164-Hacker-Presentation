@@ -55,4 +55,4 @@ def inspect_images(root_folder: str, num_images: int = 5, cmap: str = 'viridis')
         plt.show()
 
 if __name__ == "__main__":
-    inspect_images("share/data/MNIST/substitute/arch_dnn_0_T", 20)
+    inspect_images("share/data/MNIST/substitute/arch_dnn_0_norm_T", 3)

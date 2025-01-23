@@ -7,9 +7,6 @@ import shutil
 from .augmented_dataset import AugmentedDataset
 from .utils import check_seed_setted
 
-# TODO potentially make saving the files to google drive
-
-
 # MNIST
 def load_mnist_dataset(
     batch_size=64,
@@ -23,10 +20,7 @@ def load_mnist_dataset(
 
     transform = transforms.Compose(
         [
-            transforms.ToTensor(),
-            transforms.Normalize(
-                (0.1307,), (0.3081,)
-            ),  # found at: https://datascience.stackexchange.com/questions/46228/how-mean-and-deviation-come-out-with-mnist-dataset
+            transforms.ToTensor()
         ]
     )
     full_train_dataset = datasets.MNIST(
@@ -113,11 +107,7 @@ def load_cifar10_dataset(
         [
             transforms.ToTensor(),
             transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.Normalize(
-                (0.49139968, 0.48215827, 0.44653124),
-                (0.24703233, 0.24348505, 0.26158768),
-            ),  # found at: https://stackoverflow.com/questions/66678052/how-to-calculate-the-mean-and-the-std-of-cifar10-data
+            transforms.RandomHorizontalFlip()
         ]
     )
     full_train_dataset = datasets.CIFAR10(
@@ -181,9 +171,6 @@ def load_cifar10_dataset(
     )
     val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
-    # final_loader = DataLoader(
-    #    dataset=final_dataset, batch_size=batch_size, shuffle=False
-    # )
 
     final_loader = None
     if aug_dataset is not None:
@@ -191,4 +178,4 @@ def load_cifar10_dataset(
             dataset=aug_dataset, batch_size=batch_size, shuffle=True
         )
 
-    return train_loader, val_loader, test_loader, final_loader, aug_dataset
+    return train_loader, val_loader, test_loader, test_dataset, final_loader, aug_dataset

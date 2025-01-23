@@ -59,7 +59,7 @@ def train_classifier(
 
         if val_loader is not None:
             correct, total, test_loss, accuracy = test_batches(
-                model, val_loader, criterion
+                model, val_loader, criterion, epoch=epoch
             )
 
             model_metrics_row = {
