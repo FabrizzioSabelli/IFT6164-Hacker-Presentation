@@ -220,7 +220,7 @@ def train_substitute(
                 oracle_values.append(oracle.predict(image))
 
             # TODO check this
-            subdataset.set_oracle_values(
+            subdataset.init_oracle_values(
                 oracle_values=[ov.to(torch.device("cpu")) for ov in oracle_values]
             )
 

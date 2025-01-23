@@ -3,10 +3,11 @@ import pandas as pd
 import os
 import torch
 import shutil
+from src.utils import set_device
 
 
 class AugmentedDataset(Dataset):
-    def __init__(self, annotations_path, image_dir, init_size, reservoir_sampling=None):
+    def __init__(self, annotations_path, image_dir, init_size):
         """
         Args:
             annotations (str): CSV file containing image file name and corresponding label.
@@ -18,25 +19,31 @@ class AugmentedDataset(Dataset):
         )  # columns ["image_id", "oracle_label", "og_id", "augmented_id"]
         self.image_dir = image_dir
         self.annotations_path = annotations_path
-        self.aug_iters = 0  # initially no augmentations
+        self.aug_iters = (
+            -1
+        )  # initially no oracle labels for initial dataset so we increment to 0 after that is done
         self.init_size = init_size
-        self.reservoir_sampling = reservoir_sampling
 
     def reservoir_sampling(self, dataset, idx):
         pass
 
-    def set_oracle_values(self, oracle_values):
+    def init_oracle_values(self, oracle_values):
         self.annotations_df["oracle_label"] = oracle_values
+        self.annotations_df["augmented_id"] = 0
         self.annotations_df.to_csv(self.annotations_path, index=False)
+
+        self.aug_iters = 0  # we have set the oracle values so we can start augmenting
 
     def jacobian_augmentation(
         self,
         oracle,
         substitute,
         lambda_=0.1,
+        inv_lambda=False,
+        reservoir_sampling=None,
     ):
 
-        if self.reservoir_sampling is not None:
+        if reservoir_sampling is not None:
             # dataset = self.reservoir_sampling(dataset, idx)
             pass
 
@@ -54,16 +61,43 @@ class AugmentedDataset(Dataset):
 
         new_annotations = []
         dataset_size = len(self.annotations_df.index)
+
+        # get model device
+        device, device_name = set_device(substitute)
+
+        # the model didn't perform well on previous iteration so we change the sign of lambda
+        if inv_lambda:
+            lambda_ = -lambda_
+
         # TODO modify later for CIFAR-10
         for idx in range(sample_size):
 
             x, y = self.__getitem__(idx)
 
+            # send x to the models device
+            x = x.to(device)
+
+            # TODO check this with linear stuff and CIFAR-10
             jacobian = torch.autograd.functional.jacobian(
                 substitute, x.unsqueeze(dim=0)
             ).squeeze()  # remove all the 1s
+
+            if x.shape[0] == 1:
+                sign_jac_y = torch.sign(jacobian[y]).unsqueeze(
+                    dim=0
+                )  # if dim = 1 we need to add one since sueeze removes it
+            else:
+                sign_jac_y = torch.sign(jacobian[y])
             # jacobian input (batch_size, num_channels, height, width) output (batch_size, num_output, batch_size, num_channels, height, width)
-            x_new = x + lambda_ * torch.sign(jacobian[y, :, :])
+
+            x_new = torch.clip(
+                x + lambda_ * sign_jac_y,
+                min=0,
+                max=1,
+            )  # indexing happens on first dimension
+
+            # save on cpu
+            x_new = x_new.to("cpu")
 
             new_idx = dataset_size + idx
             new_image_id = f"image_{new_idx}.pt"
@@ -80,11 +114,10 @@ class AugmentedDataset(Dataset):
 
             new_annotations.append(
                 {
-                    "image_id": new_image_id,
-                    "oracle_label": y_new,
+                    "image_id": new_idx,
+                    "oracle_label": y_new.item(),
                     "og_id": new_idx % self.init_size,
                     "augmented_id": tmp_aug_iters,
-                    "true_label": -1,  # since we don't care
                 }
             )
 
@@ -109,19 +142,30 @@ class AugmentedDataset(Dataset):
         And so on. In this example, we assume no reservoir sampling, if not the indexes will be different.
         """
 
-        # Name of image file is f"{image_dir}/{aug_id}/image_{idx}.pt"
-        aug_id = idx // self.init_size
+        if self.aug_iters != -1:  # we have oracle labels
+            # Name of image file is f"{image_dir}/{aug_id}/image_{idx}.pt"
+            aug_id = idx // self.init_size
 
-        image_name = f"image_{idx}.pt"
-        folder = f"it{aug_id}"
+            image_name = f"image_{idx}.pt"
+            folder = f"it{aug_id}"
 
-        img_path = self.image_dir + "/" + folder + "/" + image_name
-        label = self.annotations_df.iloc[idx]["oracle_label"]
+            img_path = self.image_dir + "/" + folder + "/" + image_name
 
-        # Load the image
-        image = torch.load(img_path)
+            label = int(self.annotations_df.iloc[idx]["oracle_label"])
 
-        return image, label
+            # Load the image
+            image = torch.load(img_path)  # , map_location=torch.device("cpu"))
+            return image, label
+
+        else:  # this is as big as self.init_size
+            # no label yet only the train images
+
+            image_name = f"image_{idx}.pt"
+            folder = f"it{0}"
+            img_path = self.image_dir + "/" + folder + "/" + image_name
+
+            image = torch.load(img_path)
+            return image, -1
 
     def get_augmentation_path(self, og_idx) -> dict[str, torch.Tensor]:
         """Function that returns the path of an augmented image given the original image index. Returns a dictionnary with keys augmented_id and values the images as tensors."""

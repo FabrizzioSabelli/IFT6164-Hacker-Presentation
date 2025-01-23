@@ -79,7 +79,7 @@ class Oracle(nn.Module):
         super(Oracle, self).__init__()
         # Load the state dictionary
         self.device = get_device()
-        self.classifier = torch.load(file_path)
+        self.classifier = torch.load(file_path, map_location=self.device)
 
     def forward(self, x):
         if x.device != self.device:
